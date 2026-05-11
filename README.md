@@ -1,41 +1,28 @@
 # Nitro Legends - Hostinger PHP + MariaDB Foundation
 
-This project is a deployable **custom PHP + HTML + JS** foundation for a scalable open-world driving game.
+Rebuilt city foundation with proper urban planning and object alignment.
 
-## What is included
+## Included now
 
-- Open-world city-style map foundation (roads, blocks, zones, greenery, beach, airport, off-road, stunt, hills).
-- Basic drivable player car (W/A/S/D, R reset).
-- Third-person follow camera.
-- Environment setup (lighting, fog/sky).
-- PHP API endpoints for MariaDB persistence of player spawn/state.
-- SQL schema for Hostinger MariaDB/MySQL.
+- Structured road hierarchy (major + minor roads) aligned to city blocks.
+- Sidewalks on road edges and green medians on major corridors.
+- Object-safe placement: buildings, trees, lights, and props avoid road footprints.
+- Realistic districts: downtown, residential, commercial, industrial, beach, airport, mountain ring, stunt, and off-road zones.
+- Intersections with crosswalks, traffic lights, street lights, and lane center markings.
+- Upgraded rendering: ACES tone mapping, shadow tuning, bloom post-processing.
+- Car, third-person camera, and MariaDB spawn persistence retained.
 
-## Folder structure
+## Hostinger deploy
 
-- `index.php` – app entry page
-- `config/` – app + DB config
-- `api/` – PHP API endpoints
-- `sql/schema.sql` – MariaDB schema
-- `src/` – game client modules
-
-## Hostinger deployment steps
-
-1. Upload all files to `public_html`.
-2. Create a MariaDB database from Hostinger hPanel.
+1. Upload this project to `public_html`.
+2. Create MariaDB database/user in hPanel.
 3. Import `sql/schema.sql`.
-4. Set environment variables in Hostinger:
-   - `DB_HOST`
-   - `DB_PORT` (usually `3306`)
-   - `DB_NAME`
-   - `DB_USER`
-   - `DB_PASS`
-5. Open your domain.
+4. Configure env vars: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`.
+5. Open domain root (`index.php`).
 
-## API endpoints
+## Controls
 
-- `GET /api/health.php`
-- `GET /api/player_state.php?player_id=guest-driver`
-- `POST /api/player_state.php?player_id=guest-driver`
-
-Press **P** during gameplay to save player spawn to MariaDB.
+- W / S: accelerate / brake
+- A / D: steer
+- R: reset to spawn
+- P: save position to DB

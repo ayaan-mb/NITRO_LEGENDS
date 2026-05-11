@@ -2,19 +2,27 @@ import { buildCityWorld } from '../world/buildCityWorld.js';
 import { CarController } from '../entities/CarController.js';
 import { ThirdPersonCamera } from '../camera/ThirdPersonCamera.js';
 import { ApiClient } from './ApiClient.js';
+import { EffectComposer } from 'https://unpkg.com/three@0.165.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://unpkg.com/three@0.165.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://unpkg.com/three@0.165.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 export class Game {
   constructor(THREE) {
     this.THREE = THREE;
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x7fb2ff);
-    this.scene.fog = new THREE.Fog(0x8cb6ff, 180, 1500);
 
-    this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 3000);
+    this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 5000);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
     this.clock = new THREE.Clock();
+
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.24, 0.8, 0.9));
 
     this.api = new ApiClient(window.NITRO_CONFIG.apiBase);
     this.playerId = window.NITRO_CONFIG.defaultPlayer;
@@ -69,12 +77,13 @@ export class Game {
     const dt = Math.min(this.clock.getDelta(), 0.05);
     this.car.update(dt, this.world.bounds);
     this.followCam.update(dt);
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 
   onResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.composer.setSize(window.innerWidth, window.innerHeight);
   }
 }
