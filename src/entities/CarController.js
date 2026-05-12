@@ -2,9 +2,11 @@ export class CarController {
   constructor(THREE, scene, spawnPoint) {
     this.THREE = THREE;
     this.speed = 0;
-    this.maxSpeed = 80;
-    this.baseMaxSpeed = 80;
-    this.accel = 40;
+    this.maxSpeed = 400 / 2.6;
+    this.baseMaxSpeed = 400 / 2.6;
+    this.nitroMaxSpeed = 430 / 2.6;
+    this.accel = 58;
+    this.brakeForce = 85;
     this.steerPower = 1.6;
     this.enabled = true;
     this.nitro = 100;
@@ -33,6 +35,7 @@ export class CarController {
 
     this.spawnPoint = spawnPoint.clone();
     this.worldColliders = [];
+    this.throttle = 0;
     this.mesh.position.copy(this.spawnPoint);
     scene.add(this.mesh);
   }
@@ -70,26 +73,36 @@ export class CarController {
   update(dt, bounds) {
     if (!this.enabled) return;
     const previousPosition = this.mesh.position.clone();
-    const forwardInput = Number(this.keys.KeyW) - Number(this.keys.KeyS);
+    const targetThrottle = Number(this.keys.KeyW) - Number(this.keys.KeyS);
+    this.throttle += (targetThrottle - this.throttle) * Math.min(1, dt * 4.5);
+    const forwardInput = this.throttle;
     const isBraking = this.keys.Space && Math.abs(this.speed) > 8;
     this.isDrifting = isBraking && Math.abs(Number(this.keys.KeyA) - Number(this.keys.KeyD)) > 0;
 
     this.isNitroActive = this.keys.KeyN && this.nitro > 0 && forwardInput > 0.2;
     if (this.isNitroActive) {
       this.nitro = Math.max(0, this.nitro - 26 * dt);
-      this.maxSpeed = this.baseMaxSpeed * 1.65;
+      this.maxSpeed = this.nitroMaxSpeed;
     } else {
       this.nitro = Math.min(100, this.nitro + 12 * dt);
       this.maxSpeed = this.baseMaxSpeed;
     }
 
-    this.speed += forwardInput * this.accel * dt;
-    this.speed *= this.isDrifting ? 0.955 : 0.98;
+    if (forwardInput >= 0) {
+      this.speed += forwardInput * this.accel * dt;
+    } else {
+      this.speed += forwardInput * this.brakeForce * dt;
+    }
+
+    const highSpeedGrip = Math.max(0.986, 0.996 - Math.abs(this.speed) * 0.00003);
+    this.speed *= this.isDrifting ? 0.975 : highSpeedGrip;
     if (isBraking) this.speed *= 0.94;
-    this.speed = Math.max(-this.maxSpeed * 0.4, Math.min(this.maxSpeed, this.speed));
+    this.speed = Math.max(-this.baseMaxSpeed * 0.35, Math.min(this.maxSpeed, this.speed));
 
     const steerInput = Number(this.keys.KeyA) - Number(this.keys.KeyD);
-    const steerAmount = steerInput * this.steerPower * dt * Math.min(Math.abs(this.speed) / 12, 1) * (this.isDrifting ? 1.35 : 1);
+    const speedRatio = Math.min(Math.abs(this.speed) / this.baseMaxSpeed, 1);
+    const steerStability = 1 - speedRatio * 0.55;
+    const steerAmount = steerInput * this.steerPower * dt * Math.min(Math.abs(this.speed) / 16, 1) * steerStability * (this.isDrifting ? 1.15 : 1);
     this.mesh.rotation.y += steerAmount;
 
     const forward = new this.THREE.Vector3(0, 0, 1).applyQuaternion(this.mesh.quaternion);

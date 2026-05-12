@@ -80,9 +80,18 @@ export class Game {
     this.pedestrians.update(dt, this.isInCar ? this.car.mesh.position : this.character.mesh.position);
 
     if (this.isInCar) {
+      const telemetry = this.car.getTelemetry();
       this.followCam.target = this.car.mesh;
       this.followCam.update(dt);
-      this.camera.fov += ((this.car.getTelemetry().nitroActive ? 78 : 65) - this.camera.fov) * Math.min(1, dt * 7);
+      const speedFovBoost = telemetry.speedKmh > 250 ? Math.min(12, (telemetry.speedKmh - 250) * 0.06) : 0;
+      const nitroBoost = telemetry.nitroActive ? 6 : 0;
+      this.camera.fov += ((65 + speedFovBoost + nitroBoost) - this.camera.fov) * Math.min(1, dt * 7);
+
+      if (telemetry.speedKmh > 300) {
+        const shakeAmp = Math.min(0.12, (telemetry.speedKmh - 300) * 0.0012);
+        this.camera.position.x += (Math.random() - 0.5) * shakeAmp;
+        this.camera.position.y += (Math.random() - 0.5) * shakeAmp;
+      }
     } else {
       this.followCam.target = this.character.mesh;
       this.followCam.update(dt);
