@@ -16,5 +16,6 @@ require_once __DIR__ . '/config/app.php';
       <p id="status">Starting...</p>
     </div>
     <script type="module" src="./src/main.js"></script>
+      <canvas id="minimap" width="220" height="220" aria-label="City minimap"></canvas>
   </body>
 </html>

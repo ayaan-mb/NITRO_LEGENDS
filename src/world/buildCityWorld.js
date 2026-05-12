@@ -271,6 +271,48 @@ function addMountains(THREE, scene, colliders) {
   }
 }
 
+function addStreetPropsAndLife(THREE, scene, blocked, colliders) {
+  const trashMat = mat(THREE, { color: 0x2b6e5c, roughness: 0.7, metalness: 0.25 });
+  const humanMat = mat(THREE, { color: 0x4a72d9, roughness: 0.65 });
+  const npcCarMat = mat(THREE, { color: 0xf2b13f, metalness: 0.35, roughness: 0.45 });
+  const propPoints = [
+    [-480, -180], [-430, 220], [-320, -320], [-170, 300], [150, -280], [210, 260], [360, -220], [460, 220],
+  ];
+
+  for (const [x, z] of propPoints) {
+    if (inAnyRect(x, z, blocked)) continue;
+    const trash = box(THREE, 1.2, 1.8, 1.2, trashMat);
+    trash.position.set(x, 0.9, z);
+    scene.add(trash);
+    addCollider(colliders, x, z, 1.2, 1.2, 1);
+  }
+
+  const peoplePoints = [[-280, -160], [-210, 180], [80, 210], [330, -170], [560, 280], [-580, 260]];
+  for (const [x, z] of peoplePoints) {
+    if (inAnyRect(x, z, blocked)) continue;
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 1.1, 4, 8), humanMat);
+    body.position.set(x, 1.25, z);
+    body.castShadow = true;
+    scene.add(body);
+    addCollider(colliders, x, z, 1.2, 1.2, 0.7);
+  }
+
+  const parkedCars = [[-340, 120, 0], [260, -120, Math.PI / 2], [420, 120, Math.PI / 2], [-520, -120, 0], [540, -300, 0]];
+  for (const [x, z, rotY] of parkedCars) {
+    if (inAnyRect(x, z, blocked)) continue;
+    const npc = new THREE.Group();
+    const body = box(THREE, 2.3, 0.9, 4.7, npcCarMat);
+    body.position.y = 1.2;
+    const cabin = box(THREE, 1.7, 0.8, 2.2, mat(THREE, { color: 0x1e2330, metalness: 0.1, roughness: 0.3 }));
+    cabin.position.set(0, 1.85, -0.1);
+    npc.add(body, cabin);
+    npc.position.set(x, 0, z);
+    npc.rotation.y = rotY;
+    scene.add(npc);
+    addCollider(colliders, x, z, 2.6, 5.1, 0.8);
+  }
+}
+
 export function buildCityWorld(THREE, scene) {
   createGround(THREE, scene);
   createAtmosphere(THREE, scene);
@@ -283,10 +325,12 @@ export function buildCityWorld(THREE, scene) {
   addLandscapeAndTrees(THREE, scene, network.blocked, colliders);
   addSpecialAreas(THREE, scene, colliders);
   addMountains(THREE, scene, colliders);
+  addStreetPropsAndLife(THREE, scene, network.blocked, colliders);
 
   return {
     spawnPoint: new THREE.Vector3(-220, 1.2, -40),
     bounds: CITY_SIZE - 120,
     colliders,
+    roads: network.roads,
   };
 }

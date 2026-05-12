@@ -3,10 +3,16 @@ export class CarController {
     this.THREE = THREE;
     this.speed = 0;
     this.maxSpeed = 80;
-    this.accel = 35;
+    this.baseMaxSpeed = 80;
+    this.accel = 40;
     this.steerPower = 1.6;
+    this.enabled = true;
+    this.nitro = 100;
+    this.driftScore = 0;
+    this.isDrifting = false;
+    this.isNitroActive = false;
 
-    this.keys = { KeyW: false, KeyS: false, KeyA: false, KeyD: false };
+    this.keys = { KeyW: false, KeyS: false, KeyA: false, KeyD: false, Space: false, KeyN: false };
     window.addEventListener('keydown', (e) => this.onKey(e, true));
     window.addEventListener('keyup', (e) => this.onKey(e, false));
 
@@ -36,6 +42,10 @@ export class CarController {
     if (e.code === 'KeyR' && isDown) this.reset();
   }
 
+  setEnabled(enabled) {
+    this.enabled = enabled;
+  }
+
   reset() {
     this.mesh.position.copy(this.spawnPoint);
     this.mesh.rotation.set(0, 0, 0);
@@ -58,14 +68,28 @@ export class CarController {
   }
 
   update(dt, bounds) {
+    if (!this.enabled) return;
     const previousPosition = this.mesh.position.clone();
     const forwardInput = Number(this.keys.KeyW) - Number(this.keys.KeyS);
+    const isBraking = this.keys.Space && Math.abs(this.speed) > 8;
+    this.isDrifting = isBraking && Math.abs(Number(this.keys.KeyA) - Number(this.keys.KeyD)) > 0;
+
+    this.isNitroActive = this.keys.KeyN && this.nitro > 0 && forwardInput > 0.2;
+    if (this.isNitroActive) {
+      this.nitro = Math.max(0, this.nitro - 26 * dt);
+      this.maxSpeed = this.baseMaxSpeed * 1.65;
+    } else {
+      this.nitro = Math.min(100, this.nitro + 12 * dt);
+      this.maxSpeed = this.baseMaxSpeed;
+    }
+
     this.speed += forwardInput * this.accel * dt;
-    this.speed *= 0.98;
+    this.speed *= this.isDrifting ? 0.955 : 0.98;
+    if (isBraking) this.speed *= 0.94;
     this.speed = Math.max(-this.maxSpeed * 0.4, Math.min(this.maxSpeed, this.speed));
 
     const steerInput = Number(this.keys.KeyA) - Number(this.keys.KeyD);
-    const steerAmount = steerInput * this.steerPower * dt * Math.min(Math.abs(this.speed) / 10, 1);
+    const steerAmount = steerInput * this.steerPower * dt * Math.min(Math.abs(this.speed) / 12, 1) * (this.isDrifting ? 1.35 : 1);
     this.mesh.rotation.y += steerAmount;
 
     const forward = new this.THREE.Vector3(0, 0, 1).applyQuaternion(this.mesh.quaternion);
@@ -79,7 +103,19 @@ export class CarController {
       this.speed *= -0.2;
     }
 
+    if (this.isDrifting) this.driftScore += Math.abs(steerInput) * dt * Math.abs(this.speed) * 0.1;
+
     this.mesh.position.y = 1.2;
+  }
+
+  getTelemetry() {
+    return {
+      speedKmh: Math.max(0, this.speed * 2.6),
+      nitro: this.nitro,
+      drifting: this.isDrifting,
+      driftScore: Math.floor(this.driftScore),
+      nitroActive: this.isNitroActive,
+    };
   }
 
   setWorldColliders(colliders = []) {
