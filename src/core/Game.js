@@ -53,13 +53,18 @@ export class Game {
   }
 
   async start() {
-    document.body.appendChild(this.renderer.domElement);
-    this.initializeSession();
-    this.animate();
+    try {
+      document.body.appendChild(this.renderer.domElement);
+      this.initializeSession();
+      this.animate();
+    } catch (error) {
+      console.error('Game start failed', error);
+      this.setStatus('Start failed. Check browser console (F12).');
+    }
   }
 
   initializeSession() {
-    this.setStatus('Ready. Offline mode active.');
+    this.setStatus('Loaded gameplay prototype. E enter/exit • N nitro • Space drift');
   }
 
   setStatus(message) {

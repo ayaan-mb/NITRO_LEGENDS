@@ -12,7 +12,7 @@ require_once __DIR__ . '/config/app.php';
   <body>
     <div id="hud">
       <h1><?= htmlspecialchars(APP_NAME) ?></h1>
-      <p>W/S: accelerate & brake • A/D: steer • R: reset</p>
+      <p>W/S drive • A/D steer • Space drift • N nitro • E enter/exit • Shift run</p>
       <p id="status">Starting...</p>
     </div>
     <script type="module" src="./src/main.js"></script>
