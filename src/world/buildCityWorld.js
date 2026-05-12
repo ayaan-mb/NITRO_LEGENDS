@@ -84,6 +84,15 @@ function inAnyRect(x, z, rects) {
   return rects.some((r) => x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ);
 }
 
+function addCollider(colliders, x, z, w, d, padding = 0) {
+  colliders.push({
+    minX: x - w / 2 - padding,
+    maxX: x + w / 2 + padding,
+    minZ: z - d / 2 - padding,
+    maxZ: z + d / 2 + padding,
+  });
+}
+
 function createCityNetwork(THREE, scene) {
   const roadGroup = new THREE.Group();
   const roads = [];
@@ -160,7 +169,7 @@ function addStreetLights(THREE, scene, blocked) {
   }
 }
 
-function addZoneBuildings(THREE, scene, blocked) {
+function addZoneBuildings(THREE, scene, blocked, colliders) {
   const zones = [
     { name: 'downtown', minX: 120, maxX: 720, minZ: -300, maxZ: 360, h: [45, 130], color: 0x94a4ba },
     { name: 'residential', minX: -740, maxX: -140, minZ: -520, maxZ: 520, h: [8, 22], color: 0xc7c4c0 },
@@ -184,12 +193,13 @@ function addZoneBuildings(THREE, scene, blocked) {
         }));
         b.position.set(x, h / 2, zz);
         scene.add(b);
+        addCollider(colliders, x, zz, w, d, 2);
       }
     }
   });
 }
 
-function addLandscapeAndTrees(THREE, scene, blocked) {
+function addLandscapeAndTrees(THREE, scene, blocked, colliders) {
   const treeTrunk = mat(THREE, { color: 0x5d3b22 });
   const treeLeaf = mat(THREE, { color: 0x3e8a47 });
 
@@ -210,10 +220,11 @@ function addLandscapeAndTrees(THREE, scene, blocked) {
     crown.position.set(x, 8, z);
     crown.castShadow = true;
     scene.add(trunk, crown);
+    addCollider(colliders, x, z, 6.8, 6.8, 0.8);
   }
 }
 
-function addSpecialAreas(THREE, scene) {
+function addSpecialAreas(THREE, scene, colliders) {
   const beachSand = box(THREE, 360, 0.2, 300, mat(THREE, { color: 0xe9d39b }));
   beachSand.position.set(-860, 0.1, -500);
   scene.add(beachSand);
@@ -230,6 +241,7 @@ function addSpecialAreas(THREE, scene) {
   const terminal = box(THREE, 130, 26, 70, mat(THREE, { color: 0x7f90a8, metalness: 0.4 }));
   terminal.position.set(620, 13, -590);
   scene.add(terminal);
+  addCollider(colliders, 620, -590, 130, 70, 4);
 
   const stunt = box(THREE, 340, 0.2, 340, mat(THREE, { color: 0x33363b }));
   stunt.position.set(920, 0.1, 520);
@@ -240,18 +252,22 @@ function addSpecialAreas(THREE, scene) {
   scene.add(offRoad);
 }
 
-function addMountains(THREE, scene) {
+function addMountains(THREE, scene, colliders) {
   for (let i = 0; i < 55; i++) {
     const angle = (i / 55) * Math.PI * 2;
     const radius = 980 + Math.random() * 350;
     const h = 80 + Math.random() * 180;
+    const baseRadius = 55 + Math.random() * 70;
     const mountain = new THREE.Mesh(
-      new THREE.ConeGeometry(55 + Math.random() * 70, h, 9),
+      new THREE.ConeGeometry(baseRadius, h, 9),
       mat(THREE, { color: 0x738062, roughness: 0.98 })
     );
-    mountain.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    mountain.position.set(x, h / 2, z);
     mountain.castShadow = true;
     scene.add(mountain);
+    addCollider(colliders, x, z, baseRadius * 1.8, baseRadius * 1.8, 6);
   }
 }
 
@@ -259,16 +275,18 @@ export function buildCityWorld(THREE, scene) {
   createGround(THREE, scene);
   createAtmosphere(THREE, scene);
   const network = createCityNetwork(THREE, scene);
+  const colliders = [];
   addGreenMedians(THREE, scene);
   addIntersectionsDetails(THREE, scene);
   addStreetLights(THREE, scene, network.blocked);
-  addZoneBuildings(THREE, scene, network.blocked);
-  addLandscapeAndTrees(THREE, scene, network.blocked);
-  addSpecialAreas(THREE, scene);
-  addMountains(THREE, scene);
+  addZoneBuildings(THREE, scene, network.blocked, colliders);
+  addLandscapeAndTrees(THREE, scene, network.blocked, colliders);
+  addSpecialAreas(THREE, scene, colliders);
+  addMountains(THREE, scene, colliders);
 
   return {
     spawnPoint: new THREE.Vector3(-220, 1.2, -40),
     bounds: CITY_SIZE - 120,
+    colliders,
   };
 }

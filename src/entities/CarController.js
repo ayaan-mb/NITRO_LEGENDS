@@ -26,6 +26,7 @@ export class CarController {
     this.mesh.add(cabin);
 
     this.spawnPoint = spawnPoint.clone();
+    this.worldColliders = [];
     this.mesh.position.copy(this.spawnPoint);
     scene.add(this.mesh);
   }
@@ -57,6 +58,7 @@ export class CarController {
   }
 
   update(dt, bounds) {
+    const previousPosition = this.mesh.position.clone();
     const forwardInput = Number(this.keys.KeyW) - Number(this.keys.KeyS);
     this.speed += forwardInput * this.accel * dt;
     this.speed *= 0.98;
@@ -71,6 +73,27 @@ export class CarController {
 
     this.mesh.position.x = Math.max(-bounds, Math.min(bounds, this.mesh.position.x));
     this.mesh.position.z = Math.max(-bounds, Math.min(bounds, this.mesh.position.z));
+
+    if (this.intersectsAnyCollider(this.mesh.position, this.worldColliders)) {
+      this.mesh.position.copy(previousPosition);
+      this.speed *= -0.2;
+    }
+
     this.mesh.position.y = 1.2;
+  }
+
+  setWorldColliders(colliders = []) {
+    this.worldColliders = colliders;
+  }
+
+  intersectsAnyCollider(position, colliders = []) {
+    const radius = 1.7;
+    return colliders.some((c) => {
+      const nearestX = Math.max(c.minX, Math.min(position.x, c.maxX));
+      const nearestZ = Math.max(c.minZ, Math.min(position.z, c.maxZ));
+      const dx = position.x - nearestX;
+      const dz = position.z - nearestZ;
+      return dx * dx + dz * dz < radius * radius;
+    });
   }
 }

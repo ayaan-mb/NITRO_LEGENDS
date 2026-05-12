@@ -18,6 +18,7 @@ export class Game {
 
     this.world = buildCityWorld(THREE, this.scene);
     this.car = new CarController(THREE, this.scene, this.world.spawnPoint);
+    this.car.setWorldColliders(this.world.colliders);
     this.followCam = new ThirdPersonCamera(THREE, this.camera, this.car.mesh);
 
     this.statusEl = document.getElementById('status');
