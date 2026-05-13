@@ -11,13 +11,34 @@ export class PlayerCharacterController {
     window.addEventListener('keyup', (e) => this.onKey(e, false));
 
     this.mesh = new THREE.Group();
-    const legs = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0x2a3244 }));
-    legs.position.y = 0.8;
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 0.9, 4, 8), new THREE.MeshStandardMaterial({ color: 0x4f7fdc }));
-    torso.position.y = 1.8;
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 12, 12), new THREE.MeshStandardMaterial({ color: 0xf2cfb5 }));
-    head.position.y = 2.8;
-    this.mesh.add(legs, torso, head);
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xe7bf9f, roughness: 0.75 });
+    const suitMat = new THREE.MeshStandardMaterial({ color: 0x2d3342, roughness: 0.65 });
+    const shirtMat = new THREE.MeshStandardMaterial({ color: 0xf4f5f7, roughness: 0.82 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x1f1f21, roughness: 0.58 });
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.32), suitMat);
+    torso.position.y = 1.55;
+    const waist = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.46, 0.3), suitMat);
+    waist.position.y = 0.84;
+    const shirt = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.76, 0.24), shirtMat);
+    shirt.position.y = 1.52;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 14), skinMat);
+    head.position.y = 2.25;
+    const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.56, 4, 8), suitMat);
+    const armR = armL.clone();
+    armL.position.set(-0.38, 1.48, 0);
+    armR.position.set(0.38, 1.48, 0);
+    const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.66, 4, 8), suitMat);
+    const legR = legL.clone();
+    legL.position.set(-0.15, 0.35, 0);
+    legR.position.set(0.15, 0.35, 0);
+    const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.28), shoeMat);
+    const shoeR = shoeL.clone();
+    shoeL.position.set(-0.15, -0.02, 0.08);
+    shoeR.position.set(0.15, -0.02, 0.08);
+
+    this.mesh.add(torso, waist, shirt, head, armL, armR, legL, legR, shoeL, shoeR);
+    this.walkAnim = { armL, armR, legL, legR, phase: 0 };
     this.mesh.position.copy(spawnPoint);
     this.mesh.visible = false;
     scene.add(this.mesh);
@@ -35,10 +56,20 @@ export class PlayerCharacterController {
     const speed = this.keys.ShiftLeft ? this.speedRun : this.speedWalk;
     this.mesh.position.x += (side / mag) * speed * dt;
     this.mesh.position.z += (fwd / mag) * speed * dt;
+    if (Math.abs(side) + Math.abs(fwd) > 0.01) {
+      this.mesh.rotation.y = Math.atan2(side, fwd);
+      this.walkAnim.phase += dt * (this.keys.ShiftLeft ? 10 : 6);
+    }
     this.mesh.position.x = Math.max(-bounds, Math.min(bounds, this.mesh.position.x));
     this.mesh.position.z = Math.max(-bounds, Math.min(bounds, this.mesh.position.z));
     if (this.intersectsAnyCollider(this.mesh.position, colliders)) this.mesh.position.copy(prev);
     this.mesh.position.y = 0;
+
+    const swing = Math.sin(this.walkAnim.phase) * (this.keys.ShiftLeft ? 0.6 : 0.42) * (Math.abs(side) + Math.abs(fwd) > 0.01 ? 1 : 0.15);
+    this.walkAnim.armL.rotation.x = swing;
+    this.walkAnim.armR.rotation.x = -swing;
+    this.walkAnim.legL.rotation.x = -swing;
+    this.walkAnim.legR.rotation.x = swing;
   }
 
   intersectsAnyCollider(position, colliders = []) {
