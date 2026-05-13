@@ -117,7 +117,8 @@ export class Game {
     const stars = '★★★★★'.slice(0, Math.floor(this.wantedLevel)).padEnd(5, '☆');
     const health = Math.round(this.character.health);
     const mode = this.isInCar ? 'In Car (E: Exit • N: Nitro • Space: Drift)' : 'On Foot (E: Enter • Shift: Run)';
-    this.setStatus(`${mode} | ${Math.round(telemetry.speedKmh)} km/h | Nitro ${Math.round(telemetry.nitro)}% | Drift ${telemetry.driftScore} | Wanted ${stars} | HP ${health}`);
+    const customHint = telemetry.customizationOpen ? ' | Custom: 1 Paint 2 Spoiler 3 Wheels 4 Tint (C close)' : ' | C: Customize Car';
+    this.setStatus(`${mode} | ${Math.round(telemetry.speedKmh)} km/h | Nitro ${Math.round(telemetry.nitro)}% | Drift ${telemetry.driftScore} | Wanted ${stars} | HP ${health}${customHint}`);
   }
 
   renderMiniMap() {
