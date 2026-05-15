@@ -1,8 +1,9 @@
 import { CarCustomizationManager } from './CarCustomizationManager.js';
 
 export class CarController {
-  constructor(THREE, scene, spawnPoint) {
+  constructor(THREE, scene, spawnPoint, inputManager = null) {
     this.THREE = THREE;
+    this.inputManager = inputManager;
     this.speed = 0;
     this.maxSpeed = 400 / 2.6;
     this.baseMaxSpeed = 400 / 2.6;
@@ -120,6 +121,11 @@ export class CarController {
   }
 
   onKey(e, isDown) {
+    const gameplayAllowed = this.inputManager?.allowGameplayInput?.() ?? true;
+    if (!gameplayAllowed) {
+      if (e.code in this.keys) this.keys[e.code] = false;
+      return;
+    }
     if (e.code in this.keys) this.keys[e.code] = isDown;
     if (e.code === 'KeyR' && isDown) this.reset();
     if (!isDown) return;

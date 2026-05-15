@@ -7,8 +7,11 @@ import { PedestrianSystem } from '../systems/PedestrianSystem.js';
 import { PoliceWantedManager } from '../systems/PoliceWantedManager.js';
 
 export class Game {
-  constructor(THREE) {
+  constructor(THREE, { inputManager = null, uiManager = null, gameStateManager = null } = {}) {
     this.THREE = THREE;
+    this.inputManager = inputManager;
+    this.uiManager = uiManager;
+    this.gameStateManager = gameStateManager;
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 5000);
@@ -21,10 +24,10 @@ export class Game {
     this.clock = new THREE.Clock();
 
     this.world = buildCityWorld(THREE, this.scene);
-    this.car = new CarController(THREE, this.scene, this.world.spawnPoint);
+    this.car = new CarController(THREE, this.scene, this.world.spawnPoint, this.inputManager);
     this.car.setWorldColliders(this.world.colliders);
     this.followCam = new ThirdPersonCamera(THREE, this.camera, this.car.mesh);
-    this.character = new PlayerCharacterController(THREE, this.scene, this.world.spawnPoint);
+    this.character = new PlayerCharacterController(THREE, this.scene, this.world.spawnPoint, this.inputManager);
     this.traffic = new TrafficSystem(THREE, this.scene);
     this.pedestrians = new PedestrianSystem(THREE, this.scene);
     this.isInCar = true;
@@ -43,14 +46,14 @@ export class Game {
       (amount) => this.applyDamage(amount)
     );
 
-    this.statusEl = document.getElementById('status');
     this.bindControls();
     window.addEventListener('resize', this.onResize.bind(this));
   }
 
   bindControls() {
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyE' && !e.repeat) this.toggleEnterExit();
+      if (e.code === 'KeyE' && !e.repeat && this.inputManager?.allowGameplayInput?.()) this.toggleEnterExit();
+      if (!this.uiManager?.debug?.visible) return;
       if (e.code === 'F2') { e.preventDefault(); this.traffic.spawnRandomModifiedCar(); }
       if (e.code === 'F3') { e.preventDefault(); this.car.customization.randomize(); }
       if (e.code === 'F4' && !e.shiftKey) { e.preventDefault(); this.car.customization.resetStock(); }
@@ -82,26 +85,26 @@ export class Game {
       this.animate();
     } catch (error) {
       console.error('Game start failed', error);
-      this.setStatus('Start failed. Check browser console (F12).');
+      this.uiManager?.mainMenu?.showNotice?.('Start failed. Check browser console (F12).');
     }
   }
 
   initializeSession() {
-    this.setStatus('Loaded gameplay prototype. E enter/exit • N nitro • Space drift');
-  }
-
-  setStatus(message) {
-    if (this.statusEl) this.statusEl.textContent = message;
+    this.uiManager?.interactionPrompt?.show('Press E to Exit Vehicle');
   }
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
-    const dt = Math.min(this.clock.getDelta(), 0.05);
-    this.car.update(dt, this.world.bounds);
-    this.character.update(dt, this.world.bounds, this.world.colliders);
-    this.traffic.update(dt);
-    this.pedestrians.update(dt, this.isInCar ? this.car.mesh.position : this.character.mesh.position);
-    this.police.update(dt);
+    const rawDt = Math.min(this.clock.getDelta(), 0.05);
+    const gameplayActive = this.inputManager?.allowGameplayInput?.() ?? true;
+    const dt = gameplayActive ? rawDt : 0;
+    if (gameplayActive) {
+      this.car.update(dt, this.world.bounds);
+      this.character.update(dt, this.world.bounds, this.world.colliders);
+      this.traffic.update(dt);
+      this.pedestrians.update(dt, this.isInCar ? this.car.mesh.position : this.character.mesh.position);
+      this.police.update(dt);
+    }
 
     if (this.isInCar) {
       const telemetry = this.car.getTelemetry();
@@ -147,17 +150,14 @@ export class Game {
     this.car.reset();
     this.character.mesh.position.copy(this.world.spawnPoint);
     this.police.clearWantedLevel();
-    this.setStatus('Respawned at hospital. Wanted cleared.');
+    this.uiManager?.interactionPrompt?.show('Respawned. Press E to Exit Vehicle');
   }
 
   renderHUD() {
     const telemetry = this.car.getTelemetry();
-    const stars = '★★★★★'.slice(0, Math.floor(this.wantedLevel)).padEnd(5, '☆');
-    const health = Math.round(this.playerHp);
-    const pDebug = this.police.getDebug();
-    const mode = this.isInCar ? 'In Car (E: Exit • N: Nitro • Space: Drift)' : 'On Foot (E: Enter • Shift: Run)';
-    const customHint = telemetry.customizationOpen ? ' | Custom: 1 Paint 2 Spoiler 3 Wheels 4 Tint (C close)' : ' | C: Customize Car';
-    this.setStatus(`${mode} | ${Math.round(telemetry.speedKmh)} km/h | Nitro ${Math.round(telemetry.nitro)}% | Drift ${telemetry.driftScore} | Wanted ${stars} | HP ${health} | VHP ${Math.round(this.vehicleHp)} | Police O:${pDebug.officers} C:${pDebug.cars} H:${pDebug.helicopters} | Esc ${pDebug.escapeTimer.toFixed(1)}s${customHint}`);
+    this.uiManager?.hud?.update({ telemetry, playerHp: this.playerHp, vehicleHp: this.vehicleHp });
+    this.uiManager?.interactionPrompt?.show(this.isInCar ? 'Press E to Exit Vehicle' : 'Press E to Enter Vehicle');
+    this.uiManager?.debug?.update({ game: this, gameState: this.gameStateManager?.state ?? 'Gameplay' });
   }
 
   renderMiniMap() {
