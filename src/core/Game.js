@@ -4,6 +4,7 @@ import { ThirdPersonCamera } from '../camera/ThirdPersonCamera.js';
 import { PlayerCharacterController } from '../entities/PlayerCharacterController.js';
 import { TrafficSystem } from '../systems/TrafficSystem.js';
 import { PedestrianSystem } from '../systems/PedestrianSystem.js';
+import { PoliceWantedManager } from '../systems/PoliceWantedManager.js';
 
 export class Game {
   constructor(THREE) {
@@ -29,8 +30,18 @@ export class Game {
     this.isInCar = true;
     this.wantedLevel = 0;
     this.escapeTimer = 0;
+    this.playerHp = 100;
+    this.vehicleHp = 100;
     this.mapCanvas = document.getElementById('minimap');
     this.mapCtx = this.mapCanvas ? this.mapCanvas.getContext('2d') : null;
+
+    this.police = new PoliceWantedManager(
+      THREE,
+      this.scene,
+      this.world,
+      () => ({ position: this.isInCar ? this.car.mesh.position : this.character.mesh.position, inCar: this.isInCar }),
+      (amount) => this.applyDamage(amount)
+    );
 
     this.statusEl = document.getElementById('status');
     this.bindControls();
@@ -40,6 +51,13 @@ export class Game {
   bindControls() {
     window.addEventListener('keydown', (e) => {
       if (e.code === 'KeyE' && !e.repeat) this.toggleEnterExit();
+      if (e.code === 'F4' && !e.shiftKey) { e.preventDefault(); this.police.addWantedLevel(1); }
+      if (e.code === 'F4' && e.shiftKey) { e.preventDefault(); this.police.addWantedLevel(-1); }
+      if (e.code === 'F5') { e.preventDefault(); this.police.clearWantedLevel(); }
+      if (e.code === 'F6') { e.preventDefault(); this.police.updateWantedResponse(true); }
+      if (e.code === 'F7') { e.preventDefault(); this.police.spawnPoliceOfficer(); }
+      if (e.code === 'F8') { e.preventDefault(); this.police.spawnPoliceCar(); }
+      if (e.code === 'F9') { e.preventDefault(); this.police.spawnPoliceHelicopter(); }
     });
   }
 
@@ -78,6 +96,7 @@ export class Game {
     this.character.update(dt, this.world.bounds, this.world.colliders);
     this.traffic.update(dt);
     this.pedestrians.update(dt, this.isInCar ? this.car.mesh.position : this.character.mesh.position);
+    this.police.update(dt);
 
     if (this.isInCar) {
       const telemetry = this.car.getTelemetry();
@@ -99,26 +118,41 @@ export class Game {
     }
     this.camera.updateProjectionMatrix();
 
-    this.updateWanted(dt);
+    this.wantedLevel = this.police.wantedLevel;
+    this.escapeTimer = this.police.escapeTimer;
     this.renderer.render(this.scene, this.camera);
     this.renderMiniMap();
     this.renderHUD();
   }
 
-  updateWanted(dt) {
-    const speed = this.car.getTelemetry().speedKmh;
-    if (this.isInCar && speed > 120) this.wantedLevel = Math.min(5, this.wantedLevel + dt * 0.25);
-    else this.wantedLevel = Math.max(0, this.wantedLevel - dt * 0.06);
-    this.escapeTimer = this.wantedLevel > 0 ? Math.max(0, 30 - this.wantedLevel * 4) : 0;
+  applyDamage(amount) {
+    if (this.isInCar) {
+      this.vehicleHp = Math.max(0, this.vehicleHp - amount * 0.8);
+      if (this.vehicleHp < 20) this.car.steerPower = 1.3;
+    }
+    this.playerHp = Math.max(0, this.playerHp - amount);
+    this.character.health = this.playerHp;
+    if (this.playerHp <= 0) this.respawnPlayer();
+  }
+
+  respawnPlayer() {
+    this.playerHp = 100;
+    this.vehicleHp = 100;
+    this.character.health = 100;
+    this.car.reset();
+    this.character.mesh.position.copy(this.world.spawnPoint);
+    this.police.clearWantedLevel();
+    this.setStatus('Respawned at hospital. Wanted cleared.');
   }
 
   renderHUD() {
     const telemetry = this.car.getTelemetry();
     const stars = '★★★★★'.slice(0, Math.floor(this.wantedLevel)).padEnd(5, '☆');
-    const health = Math.round(this.character.health);
+    const health = Math.round(this.playerHp);
+    const pDebug = this.police.getDebug();
     const mode = this.isInCar ? 'In Car (E: Exit • N: Nitro • Space: Drift)' : 'On Foot (E: Enter • Shift: Run)';
     const customHint = telemetry.customizationOpen ? ' | Custom: 1 Paint 2 Spoiler 3 Wheels 4 Tint (C close)' : ' | C: Customize Car';
-    this.setStatus(`${mode} | ${Math.round(telemetry.speedKmh)} km/h | Nitro ${Math.round(telemetry.nitro)}% | Drift ${telemetry.driftScore} | Wanted ${stars} | HP ${health}${customHint}`);
+    this.setStatus(`${mode} | ${Math.round(telemetry.speedKmh)} km/h | Nitro ${Math.round(telemetry.nitro)}% | Drift ${telemetry.driftScore} | Wanted ${stars} | HP ${health} | VHP ${Math.round(this.vehicleHp)} | Police O:${pDebug.officers} C:${pDebug.cars} H:${pDebug.helicopters} | Esc ${pDebug.escapeTimer.toFixed(1)}s${customHint}`);
   }
 
   renderMiniMap() {
