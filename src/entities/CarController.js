@@ -64,6 +64,7 @@ export class CarController {
     const grilleTrim = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.42, 0.04), chromeMat); grilleTrim.position.set(0, 1.1, 2.45);
     const headL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.12), lightMat); headL.position.set(-0.67, 1.25, 2.42);
     const headR = headL.clone(); headR.position.x = 0.67;
+    this.headLights = [headL, headR];
     this.brakeLightL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.12), rearLightMat); this.brakeLightL.position.set(-0.68, 1.23, -2.42);
     this.brakeLightR = this.brakeLightL.clone(); this.brakeLightR.position.x = 0.68;
 
@@ -101,15 +102,16 @@ export class CarController {
     const dark = new THREE.MeshStandardMaterial({ color: 0x1f2227, metalness: 0.25, roughness: 0.6 });
     if (level === 0) return;
     if (level === 1) { const lip = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.05, 0.18), dark); this.spoilerGroup.add(lip); return; }
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(level === 2 ? 1.35 : 1.5, 0.08, 0.22), dark);
-    const standL = new THREE.Mesh(new THREE.BoxGeometry(0.07, level === 2 ? 0.18 : 0.26, 0.07), dark); standL.position.set(-0.45, -0.1, 0);
+    if (level === 2) { const duck = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.07, 0.2), dark); duck.position.y = 0.08; this.spoilerGroup.add(duck); return; }
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(level >= 4 ? 1.6 : 1.45, 0.08, 0.22), dark);
+    const standL = new THREE.Mesh(new THREE.BoxGeometry(0.07, level >= 4 ? 0.3 : 0.22, 0.07), dark); standL.position.set(-0.45, -0.1, 0);
     const standR = standL.clone(); standR.position.x = 0.45;
-    wing.position.y = level === 2 ? 0.08 : 0.16;
+    wing.position.y = level >= 4 ? 0.2 : 0.12;
     this.spoilerGroup.add(wing, standL, standR);
   }
 
   updateWheelStyle(style) {
-    const colors = [0x9aa4b2, 0x717b89, 0x1d1f22, 0xcfd6df];
+    const colors = [0x9aa4b2, 0x717b89, 0x1d1f22, 0xcfd6df, 0x4b5666, 0xaea8a0, 0x9099a8, 0x2c2f35];
     this.rimMat.color.setHex(colors[style % colors.length]);
     this.wheels.forEach((w) => {
       const s = style === 3 ? 1.12 : 1;
@@ -127,6 +129,10 @@ export class CarController {
     if (e.code === 'Digit2') this.customization.nextSpoiler();
     if (e.code === 'Digit3') this.customization.nextWheel();
     if (e.code === 'Digit4') this.customization.nextTint();
+    if (e.code === 'KeyL') {
+      const on = this.headlightsOn = !this.headlightsOn;
+      this.headLights.forEach((h)=>{h.material.emissiveIntensity = on ? 0.9 : 0.3;});
+    }
   }
 
   setEnabled(enabled) { this.enabled = enabled; }

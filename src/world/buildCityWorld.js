@@ -1,3 +1,5 @@
+import { createVehicle } from '../entities/VehicleFactory.js';
+
 const CITY_SIZE = 1800;
 const ROAD_W_MAJOR = 34;
 const ROAD_W_MINOR = 20;
@@ -274,7 +276,6 @@ function addMountains(THREE, scene, colliders) {
 function addStreetPropsAndLife(THREE, scene, blocked, colliders) {
   const trashMat = mat(THREE, { color: 0x2b6e5c, roughness: 0.7, metalness: 0.25 });
   const humanMat = mat(THREE, { color: 0x4a72d9, roughness: 0.65 });
-  const npcCarMat = mat(THREE, { color: 0xf2b13f, metalness: 0.35, roughness: 0.45 });
   const propPoints = [
     [-480, -180], [-430, 220], [-320, -320], [-170, 300], [150, -280], [210, 260], [360, -220], [460, 220],
   ];
@@ -297,19 +298,23 @@ function addStreetPropsAndLife(THREE, scene, blocked, colliders) {
     addCollider(colliders, x, z, 1.2, 1.2, 0.7);
   }
 
-  const parkedCars = [[-340, 120, 0], [260, -120, Math.PI / 2], [420, 120, Math.PI / 2], [-520, -120, 0], [540, -300, 0]];
-  for (const [x, z, rotY] of parkedCars) {
+  const parkedCars = [[-340, 120, 0], [260, -120, Math.PI / 2], [420, 120, Math.PI / 2], [-520, -120, 0], [540, -300, 0], [620, 40, Math.PI/2], [-620, 40, Math.PI/2]];
+  const parkedTypes = ['sedan','sportSedan','muscle','suv','pickup','luxury','supercar'];
+  for (let i = 0; i < parkedCars.length; i++) {
+    const [x, z, rotY] = parkedCars[i];
     if (inAnyRect(x, z, blocked)) continue;
-    const npc = new THREE.Group();
-    const body = box(THREE, 2.3, 0.9, 4.7, npcCarMat);
-    body.position.y = 1.2;
-    const cabin = box(THREE, 1.7, 0.8, 2.2, mat(THREE, { color: 0x1e2330, metalness: 0.1, roughness: 0.3 }));
-    cabin.position.set(0, 1.85, -0.1);
-    npc.add(body, cabin);
+    const npc = createVehicle(THREE, {
+      type: parkedTypes[i % parkedTypes.length],
+      color: [0xf0f1f2,0x101215,0xa5adb8,0xc4242d,0x284ab8,0xd9b429,0x7a3ca5][i % 7],
+      spoiler: i % 4,
+      lowered: i % 3 === 0 ? 0.1 : 0,
+      tint: [0.35,0.55,0.72,0.86][i % 4],
+      rimColor: [0x9aa4b2,0x1d1f22,0xcfd6df][i % 3],
+    });
     npc.position.set(x, 0, z);
     npc.rotation.y = rotY;
     scene.add(npc);
-    addCollider(colliders, x, z, 2.6, 5.1, 0.8);
+    addCollider(colliders, x, z, 2.8, 5.3, 0.9);
   }
 }
 

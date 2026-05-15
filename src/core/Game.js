@@ -51,13 +51,18 @@ export class Game {
   bindControls() {
     window.addEventListener('keydown', (e) => {
       if (e.code === 'KeyE' && !e.repeat) this.toggleEnterExit();
-      if (e.code === 'F4' && !e.shiftKey) { e.preventDefault(); this.police.addWantedLevel(1); }
-      if (e.code === 'F4' && e.shiftKey) { e.preventDefault(); this.police.addWantedLevel(-1); }
-      if (e.code === 'F5') { e.preventDefault(); this.police.clearWantedLevel(); }
-      if (e.code === 'F6') { e.preventDefault(); this.police.updateWantedResponse(true); }
-      if (e.code === 'F7') { e.preventDefault(); this.police.spawnPoliceOfficer(); }
-      if (e.code === 'F8') { e.preventDefault(); this.police.spawnPoliceCar(); }
+      if (e.code === 'F2') { e.preventDefault(); this.traffic.spawnRandomModifiedCar(); }
+      if (e.code === 'F3') { e.preventDefault(); this.car.customization.randomize(); }
+      if (e.code === 'F4' && !e.shiftKey) { e.preventDefault(); this.car.customization.resetStock(); }
+      if (e.code === 'F5') { e.preventDefault(); this.car.customization.nextPaint(); }
+      if (e.code === 'F6') { e.preventDefault(); this.car.customization.nextWheel(); }
+      if (e.code === 'F7') { e.preventDefault(); this.car.customization.nextSpoiler(); }
+      if (e.code === 'F8') { e.preventDefault(); for (let i = 0; i < 10; i++) this.traffic.spawnCar(200 + i); }
       if (e.code === 'F9') { e.preventDefault(); this.police.spawnPoliceHelicopter(); }
+      if (e.code === 'F10') { e.preventDefault(); this.police.spawnPoliceOfficer(); }
+      if (e.code === 'F11') { e.preventDefault(); this.police.spawnPoliceCar(); }
+      if (e.code === 'F12' && !e.shiftKey) { e.preventDefault(); this.police.updateWantedResponse(true); }
+      if (e.code === 'F4' && e.shiftKey) { e.preventDefault(); this.police.addWantedLevel(1); }
     });
   }
 
