@@ -1,6 +1,7 @@
 export class PlayerCharacterController {
-  constructor(THREE, scene, spawnPoint) {
+  constructor(THREE, scene, spawnPoint, inputManager = null) {
     this.THREE = THREE;
+    this.inputManager = inputManager;
     this.scene = scene;
     this.speedWalk = 6;
     this.speedRun = 11;
@@ -44,7 +45,14 @@ export class PlayerCharacterController {
     scene.add(this.mesh);
   }
 
-  onKey(e, isDown) { if (e.code in this.keys) this.keys[e.code] = isDown; }
+  onKey(e, isDown) {
+    const gameplayAllowed = this.inputManager?.allowGameplayInput?.() ?? true;
+    if (!gameplayAllowed) {
+      if (e.code in this.keys) this.keys[e.code] = false;
+      return;
+    }
+    if (e.code in this.keys) this.keys[e.code] = isDown;
+  }
   setActive(active) { this.active = active; this.mesh.visible = active; }
 
   update(dt, bounds, colliders = []) {
