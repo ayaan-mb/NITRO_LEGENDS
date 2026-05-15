@@ -3,16 +3,126 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nitro Legends Foundation</title>
+    <title>Nitro Legends</title>
     <link rel="stylesheet" href="./src/styles/main.css" />
   </head>
-  <body>
-    <div id="hud">
-      <h1>Nitro Legends: City Prototype</h1>
-      <p>W/S drive • A/D steer • Space drift • N nitro • E enter/exit • Shift run</p>
-      <p id="status">Starting...</p>
-    </div>
+  <body data-game-state="MainMenu">
+    <main id="app-shell">
+      <section class="screen main-menu" data-screen="main-menu" aria-label="Nitro Legends main menu">
+        <div class="menu-backdrop" aria-hidden="true"><div class="skyline-card"></div><div class="road-ribbon"></div><div class="hero-car"></div></div>
+        <div class="menu-panel glass-panel">
+          <p class="eyebrow">Open-world driving prototype</p>
+          <h1><span>Nitro</span> Legends</h1>
+          <p class="menu-copy">Start a clean city drive with polished menus, guided controls, and a focused HUD foundation.</p>
+          <div class="menu-actions">
+            <button class="nl-button primary" data-action="new-game">New Game</button>
+            <button class="nl-button" data-action="continue">Continue</button>
+            <button class="nl-button" data-action="controls">Controls</button>
+            <button class="nl-button" data-action="settings">Settings</button>
+            <button class="nl-button quiet" data-action="exit">Exit</button>
+          </div>
+          <p class="menu-notice" data-menu-notice role="status" aria-live="polite"></p>
+          <p class="version-text">Prototype Branch 1 • UI Foundation</p>
+        </div>
+      </section>
+
+      <section class="screen loading-screen is-hidden" data-screen="loading" aria-label="Loading gameplay">
+        <div class="loading-card glass-panel">
+          <p class="eyebrow">Nitro Legends</p>
+          <h2>Loading CityOpenWorld</h2>
+          <div class="loading-bar" aria-hidden="true"><span data-loading-fill></span></div>
+          <p class="loading-text" data-loading-text>Preparing city stream... 0%</p>
+          <p class="loading-tip"><strong>Tip:</strong> <span data-loading-tip>Explore the city to discover shops and missions in future branches.</span></p>
+        </div>
+      </section>
+
+      <section class="screen gameplay-screen is-hidden" data-screen="gameplay" aria-label="Gameplay">
+        <canvas id="minimap" width="220" height="220" aria-label="City minimap"></canvas>
+        <div class="gameplay-hud" data-gameplay-hud>
+          <div class="hud-card objective-card"><span data-hud-objective>Objective: Explore the city and learn the controls</span></div>
+          <div class="hud-card money-card"><span data-hud-money>$0</span></div>
+          <div class="hud-card health-card"><span data-hud-health>HP 100 • Vehicle 100</span></div>
+          <div class="hud-card speed-card"><strong data-hud-speed>0 km/h</strong><small data-hud-nitro>Nitro 100%</small></div>
+          <div class="interaction-prompt" data-interaction-prompt>Press E to Enter Vehicle</div>
+        </div>
+      </section>
+    </main>
+
+    <section class="modal tutorial-modal is-hidden" data-modal="tutorial" aria-hidden="true" aria-label="Beginner tutorial">
+      <div class="modal-card tutorial-card glass-panel">
+        <button class="modal-close" data-action="tutorial-skip" aria-label="Skip tutorial">Skip</button>
+        <article class="tutorial-page is-active" data-tutorial-page>
+          <p class="eyebrow">Welcome</p><h2>Welcome to Nitro Legends</h2>
+          <p>This prototype will grow branch by branch into a complete open-world driving game.</p>
+          <p>Branch 1 focuses on game flow, tutorial guidance, HUD clarity, and clean pause/menu foundations.</p>
+        </article>
+        <article class="tutorial-page" data-tutorial-page>
+          <p class="eyebrow">Controls</p><h2>Drive and Explore</h2>
+          <div class="control-grid compact">
+            <span>W/A/S/D</span><p>Move, accelerate, brake, and steer</p>
+            <span>Space</span><p>Handbrake / Jump placeholder</p>
+            <span>E</span><p>Interact / Enter or Exit Vehicle</p>
+            <span>Esc</span><p>Pause Menu</p>
+            <span>M</span><p>Map placeholder</p>
+          </div>
+        </article>
+        <article class="tutorial-page" data-tutorial-page>
+          <p class="eyebrow">Gameplay Intro</p><h2>Current Branch Scope</h2>
+          <ul class="feature-list">
+            <li>Use the car to explore the city and test the driving feel.</li>
+            <li>Future branches will add garages, police, showrooms, missions, and more.</li>
+            <li>This branch keeps gameplay simple while establishing the startup and UI foundation.</li>
+          </ul>
+        </article>
+        <div class="modal-actions">
+          <button class="nl-button" data-action="tutorial-back">Back</button>
+          <button class="nl-button primary" data-action="tutorial-next">Next</button>
+          <button class="nl-button primary is-hidden" data-action="tutorial-start">Start Game</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="modal pause-modal is-hidden" data-modal="pause" aria-hidden="true" aria-label="Pause menu">
+      <div class="modal-card pause-card glass-panel">
+        <p class="eyebrow">Paused</p><h2>Nitro Legends</h2>
+        <button class="nl-button primary" data-action="resume">Resume</button>
+        <button class="nl-button" data-action="controls">Controls</button>
+        <button class="nl-button" data-action="settings">Settings</button>
+        <button class="nl-button" data-action="main-menu">Main Menu</button>
+        <button class="nl-button quiet" data-action="exit">Exit</button>
+      </div>
+    </section>
+
+    <section class="modal controls-modal is-hidden" data-modal="controls" aria-hidden="true" aria-label="Controls screen">
+      <div class="modal-card wide-card glass-panel">
+        <button class="modal-close" data-action="close-controls" aria-label="Close controls">Close</button>
+        <p class="eyebrow">Controls</p><h2>Command Reference</h2>
+        <div class="columns">
+          <div><h3>Driving</h3><div class="control-grid"><span>W/S/A/D</span><p>Accelerate, brake, and steer</p><span>Space</span><p>Handbrake</p><span>E</span><p>Enter / Exit</p><span>N</span><p>Nitro placeholder</p><span>H</span><p>Horn placeholder</p></div></div>
+          <div><h3>On Foot</h3><div class="control-grid"><span>W/A/S/D</span><p>Move</p><span>Shift</span><p>Run</p><span>Space</span><p>Jump</p><span>E</span><p>Interact</p></div></div>
+          <div><h3>General</h3><div class="control-grid"><span>Esc</span><p>Pause</p><span>M</span><p>Map placeholder</p><span>F1</span><p>Debug toggle</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="modal settings-modal is-hidden" data-modal="settings" aria-hidden="true" aria-label="Settings placeholder">
+      <div class="modal-card wide-card glass-panel">
+        <button class="modal-close" data-action="close-settings" aria-label="Close settings">Close</button>
+        <p class="eyebrow">Settings</p><h2>Placeholder Settings</h2>
+        <div class="settings-list">
+          <label>Volume <input type="range" min="0" max="100" value="80" /></label>
+          <label>Graphics <select><option>High</option><option>Medium</option><option>Low</option></select></label>
+          <label>Mouse Sensitivity <input type="range" min="0" max="100" value="50" /></label>
+          <label class="toggle-line"><input type="checkbox" /> FPS Toggle</label>
+        </div>
+        <p class="muted">Settings persistence will be added in a future branch.</p>
+      </div>
+    </section>
+
+    <aside class="debug-ui is-hidden" data-debug-ui aria-label="Debug overlay">
+      <strong>Debug</strong><span data-debug-fps>FPS --</span><span data-debug-position>Position --</span><span data-debug-speed>Speed --</span><span data-debug-state>State MainMenu</span>
+    </aside>
+
     <script type="module" src="./src/main.js"></script>
-      <canvas id="minimap" width="220" height="220" aria-label="City minimap"></canvas>
   </body>
 </html>
