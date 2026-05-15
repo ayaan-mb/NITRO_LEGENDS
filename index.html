@@ -3,16 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nitro Legends Foundation</title>
+    <title>Nitro Legends</title>
     <link rel="stylesheet" href="./src/styles/main.css" />
   </head>
-  <body>
-    <div id="hud">
-      <h1>Nitro Legends: City Prototype</h1>
-      <p>W/S drive • A/D steer • Space drift • N nitro • E enter/exit • Shift run</p>
+  <body class="menu-active">
+    <main id="main-menu" class="main-menu" aria-label="Nitro Legends main menu">
+      <div class="menu-art" aria-hidden="true">
+        <div class="city-silhouette"></div>
+        <div class="road-stripe"></div>
+        <div class="menu-car"></div>
+      </div>
+
+      <section class="menu-card" aria-labelledby="menu-title">
+        <p class="menu-kicker">Open-world racing prototype</p>
+        <h1 id="menu-title"><span>Nitro</span> Legends</h1>
+        <p class="menu-copy">Choose your route, start the current playable city scene, and keep the prototype clean while future branches expand the world.</p>
+
+        <div class="menu-actions">
+          <button class="menu-button primary" data-action="new-game">New Game</button>
+          <button class="menu-button" data-action="continue">Continue</button>
+          <button class="menu-button" data-action="controls">Controls</button>
+          <button class="menu-button" data-action="settings">Settings</button>
+          <button class="menu-button quiet" data-action="exit">Exit</button>
+        </div>
+
+        <p class="menu-notice" data-menu-notice role="status" aria-live="polite"></p>
+        <p class="version-text">Branch 1 Main Menu</p>
+      </section>
+
+      <section class="placeholder-panel is-hidden" data-placeholder-panel aria-label="Menu placeholder panel">
+        <button class="panel-close" data-action="close-panel" aria-label="Close panel">×</button>
+        <h2 data-placeholder-title>Placeholder</h2>
+        <p data-placeholder-text>Placeholder text.</p>
+      </section>
+    </main>
+
+    <div id="hud" aria-hidden="true">
+      <h1>Nitro Legends</h1>
       <p id="status">Starting...</p>
     </div>
+    <canvas id="minimap" width="220" height="220" aria-label="City minimap"></canvas>
     <script type="module" src="./src/main.js"></script>
-      <canvas id="minimap" width="220" height="220" aria-label="City minimap"></canvas>
   </body>
 </html>

@@ -1,5 +1,12 @@
 :root {
   color-scheme: dark;
+  --bg: #07111d;
+  --panel: rgba(8, 17, 31, 0.82);
+  --line: rgba(133, 203, 255, 0.24);
+  --blue: #37b7ff;
+  --yellow: #ffd45a;
+  --text: #f4f8ff;
+  --muted: #a8b4c6;
 }
 
 * {
@@ -9,30 +16,236 @@
 body {
   margin: 0;
   overflow: hidden;
-  font-family: Inter, system-ui, Arial, sans-serif;
-  background: #0a1420;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at 70% 10%, #143152, var(--bg) 46%, #030812 100%);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+body.menu-active {
+  cursor: default;
+}
+
+body.gameplay-active {
+  cursor: none;
+}
+
+canvas:not(#minimap) {
+  position: fixed;
+  inset: 0;
+  display: block;
+  z-index: 1;
+}
+
+.main-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 4rem);
+  overflow: hidden;
+  background: linear-gradient(120deg, rgba(3, 9, 18, 0.98), rgba(8, 30, 54, 0.92));
+}
+
+.menu-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.city-silhouette {
+  position: absolute;
+  right: 6vw;
+  top: 12vh;
+  width: min(42rem, 62vw);
+  height: 42vh;
+  background: linear-gradient(to top, rgba(55, 183, 255, 0.08), transparent), repeating-linear-gradient(90deg, transparent 0 28px, rgba(255, 255, 255, 0.06) 28px 32px), linear-gradient(160deg, rgba(21, 73, 116, 0.85), rgba(4, 10, 20, 0.2));
+  clip-path: polygon(0 85%, 6% 85%, 6% 55%, 14% 55%, 14% 75%, 22% 75%, 22% 38%, 33% 38%, 33% 72%, 43% 72%, 43% 24%, 55% 24%, 55% 68%, 66% 68%, 66% 44%, 77% 44%, 77% 82%, 100% 82%, 100% 100%, 0 100%);
+}
+
+.road-stripe {
+  position: absolute;
+  left: -10vw;
+  right: -10vw;
+  bottom: 8vh;
+  height: 18vh;
+  transform: skewY(-5deg);
+  background: linear-gradient(90deg, rgba(255, 212, 90, 0.18), rgba(55, 183, 255, 0.14)), #08111d;
+  border-top: 1px solid rgba(255, 212, 90, 0.28);
+}
+
+.menu-car {
+  position: absolute;
+  right: 13vw;
+  bottom: 16vh;
+  width: min(24rem, 38vw);
+  height: 5.2rem;
+  border-radius: 58% 42% 18% 18%;
+  background: linear-gradient(180deg, var(--yellow), #c48720);
+  box-shadow: 0 24px 35px rgba(0, 0, 0, 0.5);
+}
+
+.menu-car::before,
+.menu-car::after {
+  content: '';
+  position: absolute;
+  bottom: -1.25rem;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, #9fb3c7 0 28%, #151a20 30% 58%, #05080c 60%);
+}
+
+.menu-car::before {
+  left: 12%;
+}
+
+.menu-car::after {
+  right: 14%;
+}
+
+.menu-card,
+.placeholder-panel {
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(10, 21, 38, 0.92), rgba(6, 12, 22, 0.74));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.menu-card {
+  width: min(34rem, 94vw);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: 1.35rem;
+  margin-right: min(34vw, 28rem);
+}
+
+.menu-kicker {
+  margin: 0 0 0.65rem;
+  color: var(--yellow);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.menu-card h1 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  line-height: 0.88;
+  letter-spacing: -0.07em;
+  text-transform: uppercase;
+}
+
+.menu-card h1 span {
+  color: var(--yellow);
+  text-shadow: 0 0 30px rgba(255, 212, 90, 0.26);
+}
+
+.menu-copy {
+  max-width: 30rem;
+  margin: 0 0 1.3rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.menu-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.menu-button {
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(133, 203, 255, 0.24);
+  border-radius: 0.85rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.055);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.menu-button:hover,
+.menu-button:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 212, 90, 0.8);
+  background: rgba(55, 183, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(55, 183, 255, 0.12);
+}
+
+.menu-button.primary {
+  color: #09111e;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--yellow), #ffae35);
+  font-weight: 800;
+}
+
+.menu-button.quiet {
+  color: var(--muted);
+}
+
+.menu-notice {
+  min-height: 1.4rem;
+  margin: 1rem 0 0;
+  color: var(--yellow);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.menu-notice.is-visible {
+  opacity: 1;
+}
+
+.version-text {
+  margin: 1.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.placeholder-panel {
+  position: absolute;
+  right: clamp(1rem, 6vw, 5rem);
+  bottom: clamp(1rem, 8vh, 5rem);
+  width: min(28rem, 90vw);
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+
+.placeholder-panel h2 {
+  margin: 0 2rem 0.6rem 0;
+  color: var(--blue);
+}
+
+.placeholder-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.panel-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.8rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 #hud {
-  position: fixed;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 10;
-  padding: 0.6rem 0.9rem;
-  border-radius: 0.5rem;
-  background: rgba(5, 10, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-#hud h1 {
-  font-size: 0.9rem;
-  margin: 0 0 0.25rem;
-}
-
-#hud p {
-  margin: 0;
-  font-size: 0.8rem;
-  opacity: 0.9;
+  display: none;
 }
 
 #minimap {
@@ -45,4 +258,20 @@ body {
   border-radius: 10px;
   background: rgba(6, 16, 26, 0.82);
   z-index: 12;
+  display: none;
+}
+
+body.gameplay-active #minimap {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .menu-card {
+    margin-right: 0;
+  }
+
+  .menu-car,
+  .city-silhouette {
+    opacity: 0.35;
+  }
 }
